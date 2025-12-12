@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Settings, Utensils, Zap, Activity, ChevronRight, Save, RotateCcw, Flame, X, ArrowLeft, Minus } from 'lucide-react';
+import { Plus, Trash2, Settings, Utensils, Zap, Activity, ChevronRight, ChevronLeft, Save, RotateCcw, Flame, X, ArrowLeft, Minus, Calendar } from 'lucide-react';
 
 // --- Default Data & Constants ---
 
@@ -9,6 +9,13 @@ const DEFAULT_GOALS = {
   carbs: 520,  // ~8.4g/kg (High end for endurance)
   protein: 110, // ~1.8g/kg (Recovery focus)
   fat: 85      // Balance
+};
+
+const DEFAULT_STATS = {
+  weight: 62,
+  height: 170,
+  age: 25,
+  sex: 'Male'
 };
 
 const MEAL_TYPES = [
@@ -301,17 +308,20 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType, customFoods, onSaveCus
   );
 };
 
-const SettingsModal = ({ isOpen, onClose, goals, setGoals }) => {
+const SettingsModal = ({ isOpen, onClose, goals, setGoals, stats, setStats }) => {
   const [localGoals, setLocalGoals] = useState(goals);
+  const [localStats, setLocalStats] = useState(stats || DEFAULT_STATS);
 
   useEffect(() => {
     setLocalGoals(goals);
-  }, [goals]);
+    setLocalStats(stats || DEFAULT_STATS);
+  }, [goals, stats]);
 
   if (!isOpen) return null;
 
   const handleSave = () => {
     setGoals(localGoals);
+    setStats(localStats);
     onClose();
   };
 
@@ -319,83 +329,139 @@ const SettingsModal = ({ isOpen, onClose, goals, setGoals }) => {
     setLocalGoals(prev => ({ ...prev, [field]: parseInt(value) || 0 }));
   };
 
+  const handleStatChange = (field, value) => {
+    setLocalStats(prev => ({ ...prev, [field]: value }));
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-slate-100 dark:border-slate-700">
-          <h3 className="font-bold text-lg text-slate-800 dark:text-white">Adjust Targets</h3>
+          <h3 className="font-bold text-lg text-slate-800 dark:text-white">Settings</h3>
           <p className="text-xs text-slate-500">Tailored for 62kg, 3h training load.</p>
         </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Daily Calories</label>
-            <div className="flex gap-2 items-center">
-              <input 
-                type="number"
-                className="w-24 p-2 text-right border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white font-bold text-blue-600"
-                value={localGoals.calories}
-                onChange={e => handleInputChange('calories', e.target.value)}
-              />
-              <input 
-                type="range" min="1500" max="6000" step="50"
-                className="flex-1 accent-blue-600"
-                value={localGoals.calories}
-                onChange={e => handleInputChange('calories', e.target.value)}
-              />
+        <div className="p-6 space-y-6 overflow-y-auto">
+          {/* Rider Profile Section */}
+          <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+            <h4 className="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center gap-2">
+              <Activity size={14} /> Rider Profile
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Weight (kg)</label>
+                <input 
+                  type="number" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-800 dark:text-white"
+                  value={localStats.weight}
+                  onChange={e => handleStatChange('weight', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Height (cm)</label>
+                <input 
+                  type="number" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-800 dark:text-white"
+                  value={localStats.height}
+                  onChange={e => handleStatChange('height', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Age</label>
+                <input 
+                  type="number" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-800 dark:text-white"
+                  value={localStats.age}
+                  onChange={e => handleStatChange('age', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Sex</label>
+                <select 
+                  className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-800 dark:text-white text-sm"
+                  value={localStats.sex}
+                  onChange={e => handleStatChange('sex', e.target.value)}
+                >
+                  <option>Male</option>
+                  <option>Female</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Carbohydrates (g)</label>
-            <div className="flex gap-2 items-center">
-              <input 
-                type="number"
-                className="w-24 p-2 text-right border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white font-bold text-orange-500"
-                value={localGoals.carbs}
-                onChange={e => handleInputChange('carbs', e.target.value)}
-              />
-              <input 
-                type="range" min="50" max="800" step="5"
-                className="flex-1 accent-orange-500"
-                value={localGoals.carbs}
-                onChange={e => handleInputChange('carbs', e.target.value)}
-              />
-            </div>
-          </div>
+          <hr className="border-slate-100 dark:border-slate-700" />
 
-          <div>
-            <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Protein (g)</label>
-            <div className="flex gap-2 items-center">
-              <input 
-                type="number"
-                className="w-24 p-2 text-right border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white font-bold text-green-500"
-                value={localGoals.protein}
-                onChange={e => handleInputChange('protein', e.target.value)}
-              />
-              <input 
-                type="range" min="40" max="300" step="5"
-                className="flex-1 accent-green-500"
-                value={localGoals.protein}
-                onChange={e => handleInputChange('protein', e.target.value)}
-              />
+          {/* Goals Section */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
+              <Flame size={14} /> Daily Targets
+            </h4>
+            <div>
+              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Daily Calories</label>
+              <div className="flex gap-2 items-center">
+                <input 
+                  type="number"
+                  className="w-24 p-2 text-right border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white font-bold text-blue-600"
+                  value={localGoals.calories}
+                  onChange={e => handleInputChange('calories', e.target.value)}
+                />
+                <input 
+                  type="range" min="1500" max="6000" step="50"
+                  className="flex-1 accent-blue-600"
+                  value={localGoals.calories}
+                  onChange={e => handleInputChange('calories', e.target.value)}
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Fat (g)</label>
-            <div className="flex gap-2 items-center">
-               <input 
-                type="number"
-                className="w-24 p-2 text-right border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white font-bold text-yellow-500"
-                value={localGoals.fat}
-                onChange={e => handleInputChange('fat', e.target.value)}
-              />
-              <input 
-                type="range" min="20" max="200" step="5"
-                className="flex-1 accent-yellow-500"
-                value={localGoals.fat}
-                onChange={e => handleInputChange('fat', e.target.value)}
-              />
+            <div>
+              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Carbohydrates (g)</label>
+              <div className="flex gap-2 items-center">
+                <input 
+                  type="number"
+                  className="w-24 p-2 text-right border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white font-bold text-orange-500"
+                  value={localGoals.carbs}
+                  onChange={e => handleInputChange('carbs', e.target.value)}
+                />
+                <input 
+                  type="range" min="50" max="800" step="5"
+                  className="flex-1 accent-orange-500"
+                  value={localGoals.carbs}
+                  onChange={e => handleInputChange('carbs', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Protein (g)</label>
+              <div className="flex gap-2 items-center">
+                <input 
+                  type="number"
+                  className="w-24 p-2 text-right border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white font-bold text-green-500"
+                  value={localGoals.protein}
+                  onChange={e => handleInputChange('protein', e.target.value)}
+                />
+                <input 
+                  type="range" min="40" max="300" step="5"
+                  className="flex-1 accent-green-500"
+                  value={localGoals.protein}
+                  onChange={e => handleInputChange('protein', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Fat (g)</label>
+              <div className="flex gap-2 items-center">
+                 <input 
+                  type="number"
+                  className="w-24 p-2 text-right border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white font-bold text-yellow-500"
+                  value={localGoals.fat}
+                  onChange={e => handleInputChange('fat', e.target.value)}
+                />
+                <input 
+                  type="range" min="20" max="200" step="5"
+                  className="flex-1 accent-yellow-500"
+                  value={localGoals.fat}
+                  onChange={e => handleInputChange('fat', e.target.value)}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -422,6 +488,7 @@ export default function App() {
   const [logs, setLogs] = useState({});
   const [goals, setGoals] = useState(DEFAULT_GOALS);
   const [customFoods, setCustomFoods] = useState([]); // Persistent custom foods
+  const [stats, setStats] = useState(DEFAULT_STATS); // User Stats
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeMealType, setActiveMealType] = useState('breakfast');
@@ -432,10 +499,12 @@ export default function App() {
     const savedLogs = localStorage.getItem('cyclistMacroLogs');
     const savedGoals = localStorage.getItem('cyclistMacroGoals');
     const savedCustomFoods = localStorage.getItem('cyclistMacroCustomFoods');
+    const savedStats = localStorage.getItem('cyclistMacroStats');
     
     if (savedLogs) setLogs(JSON.parse(savedLogs));
     if (savedGoals) setGoals(JSON.parse(savedGoals));
     if (savedCustomFoods) setCustomFoods(JSON.parse(savedCustomFoods));
+    if (savedStats) setStats(JSON.parse(savedStats));
   }, []);
 
   // Save to local storage
@@ -443,7 +512,8 @@ export default function App() {
     localStorage.setItem('cyclistMacroLogs', JSON.stringify(logs));
     localStorage.setItem('cyclistMacroGoals', JSON.stringify(goals));
     localStorage.setItem('cyclistMacroCustomFoods', JSON.stringify(customFoods));
-  }, [logs, goals, customFoods]);
+    localStorage.setItem('cyclistMacroStats', JSON.stringify(stats));
+  }, [logs, goals, customFoods, stats]);
 
   // Daily Aggregation
   const dailyLog = logs[currentDate] || { breakfast: [], lunch: [], dinner: [], snacks: [], training: [] };
@@ -483,6 +553,28 @@ export default function App() {
     }
   };
 
+  // Date Navigation Helper
+  const changeDate = (days) => {
+    const date = new Date(currentDate);
+    date.setDate(date.getDate() + days);
+    setCurrentDate(date.toISOString().split('T')[0]);
+  };
+
+  const formatDateLabel = (dateStr) => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
+    if (dateStr === today.toISOString().split('T')[0]) return 'Today';
+    if (dateStr === yesterday.toISOString().split('T')[0]) return 'Yesterday';
+    if (dateStr === tomorrow.toISOString().split('T')[0]) return 'Tomorrow';
+    
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans">
       
@@ -491,7 +583,7 @@ export default function App() {
         <div className="max-w-md mx-auto p-4 pb-2">
           
           {/* Top Bar */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl font-black tracking-tight flex items-center gap-2">
               <Activity className="text-blue-600" />
               VELO<span className="text-blue-600">FUEL</span>
@@ -504,6 +596,31 @@ export default function App() {
                 <Settings size={18} />
               </button>
             </div>
+          </div>
+
+          {/* Date Navigator */}
+          <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl mb-6">
+            <button onClick={() => changeDate(-1)} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-600 rounded-lg transition-all">
+              <ChevronLeft size={20} />
+            </button>
+            
+            <div className="flex items-center gap-2 relative">
+              <Calendar size={16} className="text-blue-500" />
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                {formatDateLabel(currentDate)}
+              </span>
+              {/* Invisible date input covering the text for native picker */}
+              <input 
+                type="date" 
+                value={currentDate}
+                onChange={(e) => setCurrentDate(e.target.value)}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+            </div>
+
+            <button onClick={() => changeDate(1)} className="p-2 text-slate-500 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-600 rounded-lg transition-all">
+              <ChevronRight size={20} />
+            </button>
           </div>
 
           {/* Progress Section */}
@@ -618,7 +735,9 @@ export default function App() {
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)} 
         goals={goals} 
-        setGoals={setGoals} 
+        setGoals={setGoals}
+        stats={stats}
+        setStats={setStats}
       />
 
     </div>
