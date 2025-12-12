@@ -22,31 +22,31 @@ const MEAL_TYPES = [
 // Curated database for cyclists
 const FOOD_DATABASE = [
   // Training Food
-  { name: 'Energy Gel (Generic)', calories: 100, carbs: 25, protein: 0, fat: 0, type: 'training' },
-  { name: 'Banana (Medium)', calories: 105, carbs: 27, protein: 1, fat: 0, type: 'produce' },
-  { name: 'Rice Cake (Homemade)', calories: 150, carbs: 30, protein: 2, fat: 2, type: 'training' },
-  { name: 'Sports Drink Mix (Scoop)', calories: 80, carbs: 20, protein: 0, fat: 0, type: 'training' },
-  { name: 'Clif Bar', calories: 250, carbs: 40, protein: 9, fat: 5, type: 'training' },
+  { name: 'Energy Gel (Generic)', calories: 100, carbs: 25, protein: 0, fat: 0, type: 'training', servingUnit: 'gel' },
+  { name: 'Banana (Medium)', calories: 105, carbs: 27, protein: 1, fat: 0, type: 'produce', servingUnit: 'banana' },
+  { name: 'Rice Cake (Homemade)', calories: 150, carbs: 30, protein: 2, fat: 2, type: 'training', servingUnit: 'cake' },
+  { name: 'Sports Drink Mix (Scoop)', calories: 80, carbs: 20, protein: 0, fat: 0, type: 'training', servingUnit: 'scoop' },
+  { name: 'Clif Bar', calories: 250, carbs: 40, protein: 9, fat: 5, type: 'training', servingUnit: 'bar' },
   
   // Carbs / Grains
-  { name: 'Oatmeal (1 cup cooked)', calories: 150, carbs: 27, protein: 6, fat: 3, type: 'grains' },
-  { name: 'White Rice (1 cup cooked)', calories: 200, carbs: 45, protein: 4, fat: 0, type: 'grains' },
-  { name: 'Pasta (1 cup cooked)', calories: 220, carbs: 43, protein: 8, fat: 1, type: 'grains' },
-  { name: 'Sweet Potato (Medium)', calories: 112, carbs: 26, protein: 2, fat: 0, type: 'produce' },
-  { name: 'Bagel (Whole)', calories: 250, carbs: 50, protein: 10, fat: 1, type: 'grains' },
+  { name: 'Oatmeal (1 cup cooked)', calories: 150, carbs: 27, protein: 6, fat: 3, type: 'grains', servingUnit: 'cup' },
+  { name: 'White Rice (1 cup cooked)', calories: 200, carbs: 45, protein: 4, fat: 0, type: 'grains', servingUnit: 'cup' },
+  { name: 'Pasta (1 cup cooked)', calories: 220, carbs: 43, protein: 8, fat: 1, type: 'grains', servingUnit: 'cup' },
+  { name: 'Sweet Potato (Medium)', calories: 112, carbs: 26, protein: 2, fat: 0, type: 'produce', servingUnit: 'potato' },
+  { name: 'Bagel (Whole)', calories: 250, carbs: 50, protein: 10, fat: 1, type: 'grains', servingUnit: 'bagel' },
 
   // Protein
-  { name: 'Chicken Breast (100g)', calories: 165, carbs: 0, protein: 31, fat: 3, type: 'protein' },
-  { name: 'Egg (Large)', calories: 70, carbs: 0, protein: 6, fat: 5, type: 'protein' },
-  { name: 'Tuna (Can)', calories: 120, carbs: 0, protein: 26, fat: 1, type: 'protein' },
-  { name: 'Greek Yogurt (1 cup)', calories: 130, carbs: 9, protein: 23, fat: 0, type: 'protein' },
-  { name: 'Protein Powder (Scoop)', calories: 120, carbs: 3, protein: 24, fat: 1, type: 'protein' },
+  { name: 'Chicken Breast (100g)', calories: 165, carbs: 0, protein: 31, fat: 3, type: 'protein', servingUnit: '100g' },
+  { name: 'Egg (Large)', calories: 70, carbs: 0, protein: 6, fat: 5, type: 'protein', servingUnit: 'egg' },
+  { name: 'Tuna (Can)', calories: 120, carbs: 0, protein: 26, fat: 1, type: 'protein', servingUnit: 'can' },
+  { name: 'Greek Yogurt (1 cup)', calories: 130, carbs: 9, protein: 23, fat: 0, type: 'protein', servingUnit: 'cup' },
+  { name: 'Protein Powder (Scoop)', calories: 120, carbs: 3, protein: 24, fat: 1, type: 'protein', servingUnit: 'scoop' },
 
   // Fats
-  { name: 'Avocado (Half)', calories: 160, carbs: 9, protein: 2, fat: 15, type: 'fat' },
-  { name: 'Peanut Butter (1 tbsp)', calories: 95, carbs: 3, protein: 4, fat: 8, type: 'fat' },
-  { name: 'Olive Oil (1 tbsp)', calories: 120, carbs: 0, protein: 0, fat: 14, type: 'fat' },
-  { name: 'Almonds (Handful)', calories: 160, carbs: 6, protein: 6, fat: 14, type: 'fat' },
+  { name: 'Avocado (Half)', calories: 160, carbs: 9, protein: 2, fat: 15, type: 'fat', servingUnit: 'half' },
+  { name: 'Peanut Butter (1 tbsp)', calories: 95, carbs: 3, protein: 4, fat: 8, type: 'fat', servingUnit: 'tbsp' },
+  { name: 'Olive Oil (1 tbsp)', calories: 120, carbs: 0, protein: 0, fat: 14, type: 'fat', servingUnit: 'tbsp' },
+  { name: 'Almonds (Handful)', calories: 160, carbs: 6, protein: 6, fat: 14, type: 'fat', servingUnit: 'handful' },
 ];
 
 // --- Components ---
@@ -72,7 +72,7 @@ const ProgressBar = ({ current, target, colorClass, label, unit = 'g' }) => {
 
 const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [customFood, setCustomFood] = useState({ name: '', calories: '', carbs: '', protein: '', fat: '' });
+  const [customFood, setCustomFood] = useState({ name: '', calories: '', carbs: '', protein: '', fat: '', servingUnit: '' });
   const [mode, setMode] = useState('search'); // 'search', 'custom'
   
   // Selection & Serving State
@@ -84,6 +84,8 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
       setSelectedItem(null);
       setServingSize(1.0);
       setSearchTerm('');
+      // Keep custom food state for reuse or clear it? Clearing for fresh entry.
+      setCustomFood({ name: '', calories: '', carbs: '', protein: '', fat: '', servingUnit: '' });
     }
   }, [isOpen]);
 
@@ -104,6 +106,7 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
       carbs: parseInt(customFood.carbs) || 0,
       protein: parseInt(customFood.protein) || 0,
       fat: parseInt(customFood.fat) || 0,
+      servingUnit: customFood.servingUnit || 'serving'
     };
     
     setSelectedItem(food);
@@ -118,7 +121,8 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
       carbs: Math.round(selectedItem.carbs * servingSize),
       protein: Math.round(selectedItem.protein * servingSize),
       fat: Math.round(selectedItem.fat * servingSize),
-      originalServing: servingSize // Optional: store if needed later
+      originalServing: servingSize,
+      servingUnit: selectedItem.servingUnit // Pass unit through
     };
     onAdd(finalFood);
     onClose();
@@ -133,13 +137,15 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
             <button onClick={() => setSelectedItem(null)} className="text-slate-400 hover:text-slate-600">
               <ArrowLeft size={20} />
             </button>
-            <h3 className="font-bold text-lg text-slate-800 dark:text-white">Adjust Serving</h3>
+            <h3 className="font-bold text-lg text-slate-800 dark:text-white">Adjust Quantity</h3>
           </div>
           
           <div className="p-6 space-y-6">
             <div className="text-center">
               <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-1">{selectedItem.name}</h2>
-              <p className="text-sm text-slate-500">Base: {selectedItem.calories} kcal / serving</p>
+              <p className="text-sm text-slate-500">
+                Base: {selectedItem.calories} kcal / {selectedItem.servingUnit || 'serving'}
+              </p>
             </div>
 
             {/* Serving Controls */}
@@ -152,7 +158,9 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
                </button>
                <div className="text-center w-24">
                  <div className="text-3xl font-black text-blue-600">{servingSize}x</div>
-                 <div className="text-xs text-slate-400 font-medium uppercase tracking-wide">Servings</div>
+                 <div className="text-xs text-slate-400 font-medium uppercase tracking-wide">
+                    {selectedItem.servingUnit || 'Servings'}
+                 </div>
                </div>
                <button 
                 onClick={() => setServingSize(servingSize + 0.25)}
@@ -251,11 +259,20 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
           {mode === 'custom' && (
             <form onSubmit={handleCustomSubmit} className="space-y-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg text-xs text-blue-800 dark:text-blue-200 mb-4">
-                Tip: Enter values for 1 serving or 100g, then adjust quantity on the next screen.
+                Tip: Enter macros for a single serving or 100g.
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 mb-1">Food Name</label>
                 <input required className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white" value={customFood.name} onChange={e => setCustomFood({...customFood, name: e.target.value})} placeholder="e.g. My Recovery Shake" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Serving Unit (Optional)</label>
+                <input 
+                  className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white" 
+                  value={customFood.servingUnit} 
+                  onChange={e => setCustomFood({...customFood, servingUnit: e.target.value})} 
+                  placeholder="e.g. 100g, 1 cup, 1 bar" 
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div><label className="block text-xs font-medium text-slate-500 mb-1">Calories</label><input type="number" required className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white" value={customFood.calories} onChange={e => setCustomFood({...customFood, calories: e.target.value})} /></div>
@@ -511,8 +528,13 @@ export default function App() {
                           <span className="text-yellow-600/70">F: {item.fat}</span>
                           {item.originalServing && item.originalServing !== 1 && (
                             <span className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-1.5 rounded-sm">
-                              {item.originalServing}x
+                              {item.originalServing}x {item.servingUnit}
                             </span>
+                          )}
+                          {item.servingUnit && item.originalServing === 1 && (
+                             <span className="bg-slate-100 dark:bg-slate-600 text-slate-500 dark:text-slate-300 px-1.5 rounded-sm">
+                               {item.servingUnit}
+                             </span>
                           )}
                         </div>
                       </div>
