@@ -20,7 +20,7 @@ const MEAL_TYPES = [
 ];
 
 // Curated database for cyclists
-const FOOD_DATABASE = [
+const STATIC_DATABASE = [
   // Training Food
   { name: 'Energy Gel (Generic)', calories: 100, carbs: 25, protein: 0, fat: 0, type: 'training', servingUnit: 'gel' },
   { name: 'Banana (Medium)', calories: 105, carbs: 27, protein: 1, fat: 0, type: 'produce', servingUnit: 'banana' },
@@ -28,16 +28,19 @@ const FOOD_DATABASE = [
   { name: 'Sports Drink Mix (Scoop)', calories: 80, carbs: 20, protein: 0, fat: 0, type: 'training', servingUnit: 'scoop' },
   { name: 'Clif Bar', calories: 250, carbs: 40, protein: 9, fat: 5, type: 'training', servingUnit: 'bar' },
   
-  // Carbs / Grains
+  // Carbs / Grains / Breakfast
   { name: 'Oatmeal (1 cup cooked)', calories: 150, carbs: 27, protein: 6, fat: 3, type: 'grains', servingUnit: 'cup' },
+  { name: 'Kelloggs Corn Flakes (Bowl)', calories: 150, carbs: 36, protein: 3, fat: 0, type: 'grains', servingUnit: 'bowl' },
   { name: 'White Rice (1 cup cooked)', calories: 200, carbs: 45, protein: 4, fat: 0, type: 'grains', servingUnit: 'cup' },
   { name: 'Pasta (1 cup cooked)', calories: 220, carbs: 43, protein: 8, fat: 1, type: 'grains', servingUnit: 'cup' },
   { name: 'Sweet Potato (Medium)', calories: 112, carbs: 26, protein: 2, fat: 0, type: 'produce', servingUnit: 'potato' },
   { name: 'Bagel (Whole)', calories: 250, carbs: 50, protein: 10, fat: 1, type: 'grains', servingUnit: 'bagel' },
+  { name: 'Toast with Jam', calories: 180, carbs: 35, protein: 3, fat: 2, type: 'grains', servingUnit: 'slice' },
 
-  // Protein
+  // Protein / Dairy
   { name: 'Chicken Breast (100g)', calories: 165, carbs: 0, protein: 31, fat: 3, type: 'protein', servingUnit: '100g' },
   { name: 'Egg (Large)', calories: 70, carbs: 0, protein: 6, fat: 5, type: 'protein', servingUnit: 'egg' },
+  { name: 'Whole Milk (1 cup)', calories: 150, carbs: 12, protein: 8, fat: 8, type: 'protein', servingUnit: 'cup' },
   { name: 'Tuna (Can)', calories: 120, carbs: 0, protein: 26, fat: 1, type: 'protein', servingUnit: 'can' },
   { name: 'Greek Yogurt (1 cup)', calories: 130, carbs: 9, protein: 23, fat: 0, type: 'protein', servingUnit: 'cup' },
   { name: 'Protein Powder (Scoop)', calories: 120, carbs: 3, protein: 24, fat: 1, type: 'protein', servingUnit: 'scoop' },
@@ -70,7 +73,7 @@ const ProgressBar = ({ current, target, colorClass, label, unit = 'g' }) => {
   );
 };
 
-const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
+const AddFoodModal = ({ isOpen, onClose, onAdd, mealType, customFoods, onSaveCustomFood }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [customFood, setCustomFood] = useState({ name: '', calories: '', carbs: '', protein: '', fat: '', servingUnit: '' });
   const [mode, setMode] = useState('search'); // 'search', 'custom'
@@ -79,19 +82,21 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [servingSize, setServingSize] = useState(1.0);
 
+  // Combine static and custom foods for search
+  const allFoods = [...(customFoods || []), ...STATIC_DATABASE];
+
   useEffect(() => {
     if (!isOpen) {
       setSelectedItem(null);
       setServingSize(1.0);
       setSearchTerm('');
-      // Keep custom food state for reuse or clear it? Clearing for fresh entry.
       setCustomFood({ name: '', calories: '', carbs: '', protein: '', fat: '', servingUnit: '' });
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const filteredFoods = FOOD_DATABASE.filter(f => 
+  const filteredFoods = allFoods.filter(f => 
     f.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -99,16 +104,20 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
     e.preventDefault();
     if (!customFood.name || !customFood.calories) return;
     
-    // Pass to selection screen essentially
     const food = {
       name: customFood.name,
       calories: parseInt(customFood.calories) || 0,
       carbs: parseInt(customFood.carbs) || 0,
       protein: parseInt(customFood.protein) || 0,
       fat: parseInt(customFood.fat) || 0,
-      servingUnit: customFood.servingUnit || 'serving'
+      servingUnit: customFood.servingUnit || 'serving',
+      isCustom: true
     };
     
+    // Save to persistent custom list immediately
+    onSaveCustomFood(food);
+    
+    // Select it for adding to today's log
     setSelectedItem(food);
   };
 
@@ -122,7 +131,7 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
       protein: Math.round(selectedItem.protein * servingSize),
       fat: Math.round(selectedItem.fat * servingSize),
       originalServing: servingSize,
-      servingUnit: selectedItem.servingUnit // Pass unit through
+      servingUnit: selectedItem.servingUnit
     };
     onAdd(finalFood);
     onClose();
@@ -216,7 +225,7 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
         {/* Tabs */}
         <div className="flex p-2 gap-2 bg-slate-50 dark:bg-slate-900/50">
           <button onClick={() => setMode('search')} className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'search' ? 'bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400' : 'text-slate-500'}`}>Search</button>
-          <button onClick={() => setMode('custom')} className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'custom' ? 'bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400' : 'text-slate-500'}`}>Custom</button>
+          <button onClick={() => setMode('custom')} className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'custom' ? 'bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400' : 'text-slate-500'}`}>Create New</button>
         </div>
 
         {/* Content */}
@@ -241,7 +250,10 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
                     className="w-full text-left p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-all group"
                   >
                     <div className="flex justify-between items-center">
-                      <span className="font-medium text-slate-800 dark:text-slate-200">{food.name}</span>
+                      <span className="font-medium text-slate-800 dark:text-slate-200">
+                        {food.name}
+                        {food.isCustom && <span className="ml-2 text-[10px] bg-blue-100 text-blue-600 px-1 rounded">User</span>}
+                      </span>
                       <span className="text-xs font-bold text-slate-400 group-hover:text-blue-500">{food.calories} kcal</span>
                     </div>
                     <div className="text-xs text-slate-500 mt-1 flex gap-3">
@@ -259,7 +271,7 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
           {mode === 'custom' && (
             <form onSubmit={handleCustomSubmit} className="space-y-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg text-xs text-blue-800 dark:text-blue-200 mb-4">
-                Tip: Enter macros for a single serving or 100g.
+                Items created here are saved to your database automatically.
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-500 mb-1">Food Name</label>
@@ -280,7 +292,7 @@ const AddFoodModal = ({ isOpen, onClose, onAdd, mealType }) => {
                 <div><label className="block text-xs font-medium text-slate-500 mb-1">Protein (g)</label><input type="number" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white" value={customFood.protein} onChange={e => setCustomFood({...customFood, protein: e.target.value})} /></div>
                 <div><label className="block text-xs font-medium text-slate-500 mb-1">Fat (g)</label><input type="number" className="w-full p-2 border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white" value={customFood.fat} onChange={e => setCustomFood({...customFood, fat: e.target.value})} /></div>
               </div>
-              <button type="submit" className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg shadow-blue-500/30 transition-all mt-4">Next: Adjust Quantity</button>
+              <button type="submit" className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg shadow-blue-500/30 transition-all mt-4">Save & Add</button>
             </form>
           )}
         </div>
@@ -303,6 +315,10 @@ const SettingsModal = ({ isOpen, onClose, goals, setGoals }) => {
     onClose();
   };
 
+  const handleInputChange = (field, value) => {
+    setLocalGoals(prev => ({ ...prev, [field]: parseInt(value) || 0 }));
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
@@ -312,52 +328,75 @@ const SettingsModal = ({ isOpen, onClose, goals, setGoals }) => {
         </div>
         <div className="p-6 space-y-4">
           <div>
-            <label className="flex justify-between text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
-              <span>Daily Calories</span>
-              <span className="text-blue-500">{localGoals.calories}</span>
-            </label>
-            <input 
-              type="range" min="1500" max="6000" step="50"
-              className="w-full accent-blue-600"
-              value={localGoals.calories}
-              onChange={e => setLocalGoals({...localGoals, calories: parseInt(e.target.value)})}
-            />
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Daily Calories</label>
+            <div className="flex gap-2 items-center">
+              <input 
+                type="number"
+                className="w-24 p-2 text-right border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white font-bold text-blue-600"
+                value={localGoals.calories}
+                onChange={e => handleInputChange('calories', e.target.value)}
+              />
+              <input 
+                type="range" min="1500" max="6000" step="50"
+                className="flex-1 accent-blue-600"
+                value={localGoals.calories}
+                onChange={e => handleInputChange('calories', e.target.value)}
+              />
+            </div>
           </div>
+
           <div>
-            <label className="flex justify-between text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
-              <span>Carbohydrates (g)</span>
-              <span className="text-orange-500">{localGoals.carbs}</span>
-            </label>
-            <input 
-              type="range" min="50" max="800" step="10"
-              className="w-full accent-orange-500"
-              value={localGoals.carbs}
-              onChange={e => setLocalGoals({...localGoals, carbs: parseInt(e.target.value)})}
-            />
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Carbohydrates (g)</label>
+            <div className="flex gap-2 items-center">
+              <input 
+                type="number"
+                className="w-24 p-2 text-right border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white font-bold text-orange-500"
+                value={localGoals.carbs}
+                onChange={e => handleInputChange('carbs', e.target.value)}
+              />
+              <input 
+                type="range" min="50" max="800" step="5"
+                className="flex-1 accent-orange-500"
+                value={localGoals.carbs}
+                onChange={e => handleInputChange('carbs', e.target.value)}
+              />
+            </div>
           </div>
+
           <div>
-            <label className="flex justify-between text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
-              <span>Protein (g)</span>
-              <span className="text-green-500">{localGoals.protein}</span>
-            </label>
-            <input 
-              type="range" min="40" max="300" step="5"
-              className="w-full accent-green-500"
-              value={localGoals.protein}
-              onChange={e => setLocalGoals({...localGoals, protein: parseInt(e.target.value)})}
-            />
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Protein (g)</label>
+            <div className="flex gap-2 items-center">
+              <input 
+                type="number"
+                className="w-24 p-2 text-right border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white font-bold text-green-500"
+                value={localGoals.protein}
+                onChange={e => handleInputChange('protein', e.target.value)}
+              />
+              <input 
+                type="range" min="40" max="300" step="5"
+                className="flex-1 accent-green-500"
+                value={localGoals.protein}
+                onChange={e => handleInputChange('protein', e.target.value)}
+              />
+            </div>
           </div>
+
           <div>
-            <label className="flex justify-between text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
-              <span>Fat (g)</span>
-              <span className="text-yellow-500">{localGoals.fat}</span>
-            </label>
-            <input 
-              type="range" min="20" max="200" step="5"
-              className="w-full accent-yellow-500"
-              value={localGoals.fat}
-              onChange={e => setLocalGoals({...localGoals, fat: parseInt(e.target.value)})}
-            />
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Fat (g)</label>
+            <div className="flex gap-2 items-center">
+               <input 
+                type="number"
+                className="w-24 p-2 text-right border border-slate-200 dark:border-slate-600 rounded bg-transparent dark:text-white font-bold text-yellow-500"
+                value={localGoals.fat}
+                onChange={e => handleInputChange('fat', e.target.value)}
+              />
+              <input 
+                type="range" min="20" max="200" step="5"
+                className="flex-1 accent-yellow-500"
+                value={localGoals.fat}
+                onChange={e => handleInputChange('fat', e.target.value)}
+              />
+            </div>
           </div>
         </div>
         <div className="p-4 bg-slate-50 dark:bg-slate-900/50 flex gap-3">
@@ -382,6 +421,7 @@ const SettingsModal = ({ isOpen, onClose, goals, setGoals }) => {
 export default function App() {
   const [logs, setLogs] = useState({});
   const [goals, setGoals] = useState(DEFAULT_GOALS);
+  const [customFoods, setCustomFoods] = useState([]); // Persistent custom foods
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeMealType, setActiveMealType] = useState('breakfast');
@@ -391,15 +431,19 @@ export default function App() {
   useEffect(() => {
     const savedLogs = localStorage.getItem('cyclistMacroLogs');
     const savedGoals = localStorage.getItem('cyclistMacroGoals');
+    const savedCustomFoods = localStorage.getItem('cyclistMacroCustomFoods');
+    
     if (savedLogs) setLogs(JSON.parse(savedLogs));
     if (savedGoals) setGoals(JSON.parse(savedGoals));
+    if (savedCustomFoods) setCustomFoods(JSON.parse(savedCustomFoods));
   }, []);
 
   // Save to local storage
   useEffect(() => {
     localStorage.setItem('cyclistMacroLogs', JSON.stringify(logs));
     localStorage.setItem('cyclistMacroGoals', JSON.stringify(goals));
-  }, [logs, goals]);
+    localStorage.setItem('cyclistMacroCustomFoods', JSON.stringify(customFoods));
+  }, [logs, goals, customFoods]);
 
   // Daily Aggregation
   const dailyLog = logs[currentDate] || { breakfast: [], lunch: [], dinner: [], snacks: [], training: [] };
@@ -420,6 +464,10 @@ export default function App() {
   const handleAddFood = (food) => {
     const updatedDailyLog = { ...dailyLog, [activeMealType]: [...(dailyLog[activeMealType] || []), food] };
     setLogs({ ...logs, [currentDate]: updatedDailyLog });
+  };
+
+  const handleSaveCustomFood = (newFood) => {
+    setCustomFoods(prev => [...prev, newFood]);
   };
 
   const removeFood = (mealType, foodId) => {
@@ -561,7 +609,9 @@ export default function App() {
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
         onAdd={handleAddFood} 
-        mealType={MEAL_TYPES.find(t => t.id === activeMealType)?.label} 
+        mealType={MEAL_TYPES.find(t => t.id === activeMealType)?.label}
+        customFoods={customFoods}
+        onSaveCustomFood={handleSaveCustomFood}
       />
 
       <SettingsModal 
